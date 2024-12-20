@@ -6,9 +6,11 @@ const VideoPlayer = ({ userId, videoId }) => {
 
     useEffect(() => {
         console.log(`VideoPlayer initialized for userId: ${userId}, videoId: ${videoId}`);
-    }, [userId, videoId]);
+        console.log(`Video source URL: ${videoSrc}`);
+    }, [userId, videoId, videoSrc]);
 
     const handleError = () => {
+        console.error(`Error loading video from ${videoSrc}`);
         setError("Failed to load video. Please try again later.");
     };
 

@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+// Function to get video title (placeholder for real implementation)
+const getVideoTitle = (videoFile) => {
+    return new Promise((resolve) => {
+        const title = videoFile.name || "No title available"; // Use filename if no metadata available
+        resolve(title);
+    });
+};
+
 const VideoUpload = ({ userId }) => {
-    const [videoId, setVideoId] = useState("");
     const [file, setFile] = useState(null);
     const [message, setMessage] = useState("");
 
@@ -13,50 +20,41 @@ const VideoUpload = ({ userId }) => {
     const handleUpload = async (e) => {
         e.preventDefault();
 
-        if (!videoId || !file) {
-            setMessage("Please fill in all fields and select a video file.");
+        if (!file) {
+            setMessage("Please select a video file.");
             return;
         }
 
         const formData = new FormData();
+        const videoTitle = await getVideoTitle(file);
         formData.append("file", file);
-
+        
         try {
+            // Post to server
             const response = await axios.post(
                 `http://localhost:4003/upload`,
                 formData,
                 {
                     headers: {
-                        "Content-Type": file.type,
                         "userid": userId,
-                        "id": videoId,
+                        "Id": videoTitle,
                     },
                 }
             );
 
-            setMessage(`Video uploaded successfully: ${response.data}`);
+            console.log("Upload response:", response.data);
+            setMessage(`Video uploaded successfully: ${response.data.message || "Success"}`);
         } catch (error) {
+            console.error("Error uploading video:", error);
             setMessage("Failed to upload video. Please try again.");
         }
     };
-
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-8">
                 <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">Upload Video</h1>
                 <form onSubmit={handleUpload} className="space-y-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Video ID
-                        </label>
-                        <input
-                            type="text"
-                            value={videoId}
-                            onChange={(e) => setVideoId(e.target.value)}
-                            required
-                            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Video File

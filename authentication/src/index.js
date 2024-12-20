@@ -37,8 +37,9 @@ const verifyToken = (req, res, next) => {
 };
 
 // Registration endpoint
+// Registration endpoint
 app.post("/register", async (req, res) => {
-    const { username, password} = req.body;
+    const { username, password } = req.body;
 
     if (!username || !password) {
         return res.status(400).json({ message: "All fields are required" });
@@ -50,25 +51,27 @@ app.post("/register", async (req, res) => {
         const usersCollection = db.collection("users");
 
         // Check if user already exists
-        const existingUser = await usersCollection.findOne({
-            $or: [{ username }]
-        });
-
+        const existingUser = await usersCollection.findOne({ username });
         if (existingUser) {
             client.close();
-            return res.status(400).json({
-                message: "Username already exists"
-            });
+            return res.status(400).json({ message: "Username already exists" });
         }
+
+        // Get the highest user ID in the collection
+        const highestUser = await usersCollection.findOne({}, { sort: { userId: -1 } });
+
+        // Parse userId as a number, defaulting to 0 if no users exist
+        const newUserId = highestUser && highestUser.userId
+            ? parseInt(highestUser.userId, 10) + 1
+            : 1;
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create new user
-        const userId = new mongodb.ObjectId().toString();
         const newUser = {
-            userId,
+            userId: newUserId, // Store as a number
             username,
             password: hashedPassword,
             createdAt: new Date()
@@ -77,17 +80,13 @@ app.post("/register", async (req, res) => {
         await usersCollection.insertOne(newUser);
 
         // Generate JWT token
-        const token = jwt.sign(
-            { userId, username },
-            JWT_SECRET,
-            { expiresIn: '24h' }
-        );
+        const token = jwt.sign({ userId: newUserId, username }, JWT_SECRET, { expiresIn: '24h' });
 
         client.close();
         res.status(201).json({
             message: "Registration successful",
             token,
-            userId,
+            userId: newUserId,
             username
         });
 
@@ -96,7 +95,6 @@ app.post("/register", async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 });
-
 // Authentication endpoint
 app.post("/authenticate", async (req, res) => {
     const { username, password } = req.body;
@@ -170,3 +168,4 @@ const PORT = process.env.PORT || 4007;
 app.listen(PORT, () => {
     console.log(`Authentication service is running on port ${PORT}`);
 });
+//////////////

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import api from "./api";
+
 import { XCircleIcon } from '@heroicons/react/24/solid';
 import {
     VideoIcon,
@@ -10,7 +12,6 @@ import {
     LogOutIcon,
     SearchIcon
 } from 'lucide-react';
-
 const VideoList = ({ userId }) => {
     const [videos, setVideos] = useState([]);
     const [error, setError] = useState(null);
@@ -18,55 +19,50 @@ const VideoList = ({ userId }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            navigate('/login');
-            return;
-        }
+    // Access environment variables
+    const videoStreamingHost = process.env.REACT_APP_VIDEO_STREAMING_HOST;
+    const videoStreamingPort = process.env.REACT_APP_VIDEO_STREAMING_PORT;
 
-        fetchVideos(token);
+    useEffect(() => {
+        console.log(`Fetching videos for userId: ${userId}`);
+        api.fetchUserVideos(userId)
+            .then((response) => {
+                console.log("Videos fetched successfully:", response.data);
+                setVideos(response.data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Error fetching videos:", err.message);
+                setError(err.message);
+                setLoading(false);
+            });
     }, [userId]);
 
-    const fetchVideos = async (token) => {
-        try {
-            const response = await axios.get(`http://localhost:4002/videos`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    userid: userId
-                }
-            });
-            setVideos(response.data);
-            setLoading(false);
-        } catch (err) {
-            setError(err.message);
-            setLoading(false);
-        }
-    };
-
+    // Handle delete video
     const handleDelete = async (videoId) => {
-        if (!window.confirm('Are you sure you want to delete this video?')) return;
-
-        const token = localStorage.getItem('token');
         try {
-            await axios.delete(`http://localhost:4005/delete`, {
+            console.log(`Attempting to delete video with id: ${videoId} for user ${userId}`);
+
+            // Make the DELETE request to the video-delete microservice
+            const response = await axios.delete("http://localhost:4005/delete", {
                 headers: {
-                    Authorization: `Bearer ${token}`,
                     userid: userId,
-                    id: videoId
-                }
+                    id: videoId,
+                },
             });
-            setVideos(videos.filter(video => video.videoId !== videoId));
+
+            if (response.status === 200) {
+                console.log(`Video with id ${videoId} deleted successfully`);
+                // Update the video list after successful deletion
+                setVideos(videos.filter((video) => video.videoId !== videoId));
+            } else {
+                console.error(`Failed to delete video with id ${videoId}`);
+                setError(`Failed to delete video with id ${videoId}`);
+            }
         } catch (error) {
+            console.error("Error deleting video:", error);
             setError("Failed to delete video. Please try again.");
         }
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('username');
-        navigate('/');
     };
 
     const filteredVideos = videos.filter(video =>
@@ -90,15 +86,7 @@ const VideoList = ({ userId }) => {
                         <div className="flex-shrink-0 flex items-center">
                             <h1 className="text-xl font-bold text-indigo-600">Personal Cloud</h1>
                         </div>
-                        <div className="flex items-center">
-                            <button
-                                onClick={handleLogout}
-                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 hover:text-gray-700"
-                            >
-                                <LogOutIcon className="h-5 w-5 mr-2" />
-                                Logout
-                            </button>
-                        </div>
+
                     </div>
                 </div>
             </nav>
@@ -139,40 +127,46 @@ const VideoList = ({ userId }) => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {filteredVideos.map((video) => (
-                            <motion.div
-                                key={video.videoId}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.3 }}
-                                className="bg-white overflow-hidden rounded-lg shadow hover:shadow-md transition-shadow duration-300"
-                            >
-                                <Link to={`/video/${userId}/${encodeURIComponent(video.videoId)}`}>
-                                    <div className="p-6">
-                                        <div className="flex items-center">
-                                            <VideoIcon className="h-8 w-8 text-indigo-600" />
-                                            <div className="ml-4">
-                                                <h3 className="text-lg font-medium text-gray-900 truncate">
-                                                    {video.videoId}
-                                                </h3>
-                                                <p className="text-sm text-gray-500">
-                                                    {new Date(video.uploadDate).toLocaleDateString()}
-                                                </p>
+                        {filteredVideos.length > 0 ? (
+                            filteredVideos.map((video) => (
+                                <motion.div
+                                    key={video.videoId}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="bg-white overflow-hidden rounded-lg shadow hover:shadow-md transition-shadow duration-300"
+                                >
+                                    <Link to={`/video/${userId}/${encodeURIComponent(video.videoId)}`}>
+                                        <div className="p-6">
+                                            <div className="flex items-center">
+                                                <VideoIcon className="h-8 w-8 text-indigo-600" />
+                                                <div className="ml-4">
+                                                    <h3 className="text-lg font-medium text-gray-900 truncate">
+                                                        {video.videoId}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-500">
+                                                        {new Date(video.uploadDate).toLocaleDateString()}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
+                                    </Link>
+                                    <div className="bg-gray-50 px-6 py-3">
+                                        <button
+                                            onClick={() => handleDelete(video.videoId)}
+                                            className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
+                                        >
+                                            <TrashIcon className="h-4 w-4 mr-1" />
+                                            Delete
+                                        </button>
                                     </div>
-                                </Link>
-                                <div className="bg-gray-50 px-6 py-3">
-                                    <button
-                                        onClick={() => handleDelete(video.videoId)}
-                                        className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
-                                    >
-                                        <TrashIcon className="h-4 w-4 mr-1" />
-                                        Delete
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center p-6 bg-gray-200 rounded-md">
+                                No videos till now
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
