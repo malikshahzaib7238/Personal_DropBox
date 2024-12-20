@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: usage-monitoring-service
+spec:
+  selector:
+    app: usage-monitoring
+  ports:
+    - port: 80
+      targetPort: 80
+  clusterIP: None  # This allows other services to communicate directly with it

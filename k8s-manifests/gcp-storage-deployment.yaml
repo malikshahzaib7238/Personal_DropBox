@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-storage-deployment
+spec:
+  replicas: 2  # For scaling
+  selector:
+    matchLabels:
+      app: video-storage
+  template:
+    metadata:
+      labels:
+        app: video-storage
+    spec:
+      containers:
+        - name: video-storage
+          image: gcr.io/cloud-project-444314/gcp-storage:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: PORT
+              value: "80"
+            - name: GCS_BUCKET_NAME
+              value: "video_streaming_cloud_project"  # Your GCP bucket
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/app/credentials.json"  # Path to the mounted credentials file
+          volumeMounts:
+            - name: gcp-credentials
+              mountPath: /app/credentials.json
+              subPath: credentials.json  # The secret's key
+      volumes:
+        - name: gcp-credentials
+          secret:
+            secretName: gcp-credentials  # Reference the secret we created

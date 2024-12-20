@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-streaming-deployment
+spec:
+  replicas: 2  # For scaling
+  selector:
+    matchLabels:
+      app: video-streaming
+  template:
+    metadata:
+      labels:
+        app: video-streaming
+    spec:
+      containers:
+      - name: video-streaming
+        image: gcr.io/cloud-project-444314/video-streaming:latest
+        ports:
+          - containerPort: 80
+        env:
+          - name: PORT
+            value: "80"
+          - name: DBHOST
+            value: "mongodb-service:27017"  # Pointing to the MongoDB service
+          - name: DBNAME
+            value: "video_service"
+          - name: VIDEO_STORAGE_HOST
+            value: "video-storage-service"
+          - name: VIDEO_STORAGE_PORT
+            value: "80"
+

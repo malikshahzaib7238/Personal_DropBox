@@ -1,0 +1,22 @@
+{
+  "name": "gcp_storage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "start:dev": "nodemon ./src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/storage": "^7.14.0",
+    "express": "^4.21.2",
+    "http": "0.0.1-security",
+    "mongodb": "^6.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.18"
+  }
+}

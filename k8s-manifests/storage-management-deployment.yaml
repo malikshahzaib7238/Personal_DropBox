@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-management-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: storage-management
+  template:
+    metadata:
+      labels:
+        app: storage-management
+    spec:
+      containers:
+      - name: storage-management
+        image: gcr.io/cloud-project-444314/cloud_project-storage-management:latest
+        ports:
+          - containerPort: 80
+        env:
+          - name: PORT
+            value: "80"
+          - name: DBHOST
+            value: "mongodb-service:27017"
+          - name: DBNAME
+            value: "video_service"
+          - name: MAX_STORAGE
+            value: "52428800"
+          - name: ALERT_THRESHOLD
+            value: "41943040"
+          - name: USAGE_MONITORING_HOST
+            value: "usage-monitoring-service"
+          - name: USAGE_MONITORING_PORT
+            value: "80"

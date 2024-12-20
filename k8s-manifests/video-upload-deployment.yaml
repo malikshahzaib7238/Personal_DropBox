@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-upload-deployment
+spec:
+  replicas: 2  # Adjust number of replicas based on your scaling needs
+  selector:
+    matchLabels:
+      app: video-upload
+  template:
+    metadata:
+      labels:
+        app: video-upload
+    spec:
+      containers:
+      - name: video-upload
+        image: gcr.io/cloud-project-444314/video-upload:latest  # Replace with your image if necessary
+        ports:
+          - containerPort: 80
+        env:
+          - name: PORT
+            value: "80"
+          - name: DBHOST
+            value: "mongodb-service:27017"  # Use Kubernetes service name for DB connection
+          - name: DBNAME
+            value: "video_service"
+          - name: VIDEO_STORAGE_HOST
+            value: "video-storage-service"
+          - name: VIDEO_STORAGE_PORT
+            value: "80"
+          - name: STORAGE_MANAGEMENT_HOST
+            value: "storage-management-service"
+          - name: STORAGE_MANAGEMENT_PORT
+            value: "80"

@@ -1,0 +1,41 @@
+1. users Collection
+
+Attributes: userId, username, password
+
+[
+  { "userId": 1, "username": "john_doe", "password": "password123" },
+  { "userId": 2, "username": "jane_smith", "password": "securepass456" },
+  { "userId": 3, "username": "alice_jones", "password": "alice1234" },
+  { "userId": 4, "username": "bob_brown", "password": "bobpass789" }
+]
+
+2. user_videos Collection
+
+Attributes: userId, videoId
+
+[
+  { "userId": 1, "videoId": "1106651_trees_pines_4k_import60e0167b4c3a9614254367720p5000br.mp4" },
+  { "userId": 1, "videoId": "big_buck_bunny_720p_2mb.mp4" },
+  { "userId": 2, "videoId": "3313_rain_raining_rain_drops_RaindropsVidevo720p5000br.mp4" },
+  { "userId": 3, "videoId": "new_video.mp4" },
+  { "userId": 4, "videoId": "new_video.mp4new_video.mp4" }
+]
+
+3. video_sizes Collection
+
+Attributes: videoId, size (in bytes)
+
+[
+  { "videoId": "1106651_trees_pines_4k_import60e0167b4c3a9614254367720p5000br.mp4", "size": 10485760 },
+  { "videoId": "3313_rain_raining_rain_drops_RaindropsVidevo720p5000br.mp4", "size": 5242880 },
+  { "videoId": "big_buck_bunny_720p_2mb.mp4", "size": 2097152 },
+  { "videoId": "new_video.mp4", "size": 1048576 },
+  { "videoId": "new_video.mp4new_video.mp4", "size": 512000 }
+]
+
+
+
+db on port 4000
+
+
+use /home/faiq/projects/cloud_project/cloud_project/cloud-project-444314-0852c8805c7b.json

@@ -1,0 +1,156 @@
+
+services:
+
+  authentication:
+    image: authentication
+    build: 
+      context: ./authentication
+      dockerfile: Dockerfile
+    container_name: authentication
+
+    ports:
+     - "4007:80"
+    environment:
+      - PORT=80
+      - DBHOST=mongodb://db:27017
+      - DBNAME=video_service
+      - JWT_SECRET=MALIK
+
+    restart: "no"
+
+  usage-monitoring:
+    image: usage-monitoring
+    build:
+      context: ./usage-monitoring
+      dockerfile: Dockerfile
+    container_name: usage-monitoring
+    volumes:
+      - /tmp/usage-monitoring/npm-cache:/root/.npm:z
+      - ./usage-monitoring/src:/usr/src/app/src:z
+    ports:
+      - "4006:80"
+    environment:
+      - PORT=80
+      - DBHOST=mongodb://db:27017
+      - DBNAME=video_service
+      - DAILY_BANDWIDTH_LIMIT=104857600 
+    restart: "no"
+
+  video-delete:
+    image: video-delete
+    build:
+      context: ./video-delete
+      dockerfile: Dockerfile
+    container_name: video-delete
+    volumes:
+      - /tmp/video-delete/npm-cache:/root/.npm:z
+      - ./video-delete/src:/usr/src/app/src:z
+    ports:
+      - "4005:80"
+    environment:
+      - PORT=80
+      - DBHOST=mongodb://db:27017
+      - DBNAME=video_service
+      - VIDEO_STORAGE_HOST=video-storage
+      - VIDEO_STORAGE_PORT=80
+      - STORAGE_MANAGEMENT_HOST=storage-management
+      - STORAGE_MANAGEMENT_PORT=80
+      - USAGE_MONITORING_HOST=usage-monitoring
+      - USAGE_MONITORING_PORT=80
+    restart: "no"
+
+  storage-management:
+    build:
+      context: ./storage-management
+      dockerfile: Dockerfile
+    container_name: storage-management
+    ports:
+      - "4004:80"
+    environment:
+      - PORT=80
+      - DBHOST=mongodb://db:27017
+      - DBNAME=video_service
+      - MAX_STORAGE=52428800 
+      - ALERT_THRESHOLD=41943040 
+      - USAGE_MONITORING_HOST=usage-monitoring
+      - USAGE_MONITORING_PORT=80
+    restart: "no"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_VIDEO_UPLOAD_HOST=video-upload
+      - REACT_APP_VIDEO_UPLOAD_PORT=80
+      - REACT_APP_VIDEO_STREAMING_HOST=video-streaming
+      - REACT_APP_VIDEO_STREAMING_PORT=80
+    restart: "no"
+
+  video-upload:
+    image: video-upload
+    build: 
+      context: ./video-upload
+      dockerfile: Dockerfile
+    container_name: video-upload
+    volumes:
+      - /tmp/video-upload/npm-cache:/root/.npm:z
+      - ./video-upload/src:/usr/src/app/src:z
+      - ./video-upload/uploads:/usr/src/app/uploads:z
+    ports:
+     - "4003:80"
+    environment:
+      - PORT=80
+      - DBHOST=mongodb://db:27017
+      - DBNAME=video_service
+      - VIDEO_STORAGE_HOST=video-storage  
+      - VIDEO_STORAGE_PORT=80 
+      - STORAGE_MANAGEMENT_HOST=storage-management
+      - STORAGE_MANAGEMENT_PORT=80
+
+    restart: "no"
+  db:
+    image: mongo:7.0.0
+    container_name: db
+    ports:
+     - "4000:27017"
+    restart: always
+
+  gcp-storage:
+    image: gcp-storage
+    build: 
+      context: ./gcp-storage
+      dockerfile: Dockerfile
+    container_name: video-storage
+    ports:
+     - "4001:80"
+    environment:
+      - PORT=80
+      - GCS_BUCKET_NAME=video_streaming_cloud_project
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+    volumes:
+      - "/home/faiq/projects/cloud_project/cloud_project/cloud-project-444314-0852c8805c7b.json:/app/credentials.json"
+    restart: "no"
+
+  video-streaming:
+    image: video-streaming
+    build: 
+      context: ./video-streaming
+      dockerfile: Dockerfile
+    container_name: video-streaming
+    ports:
+     - "4002:80"
+    environment:
+      - PORT=80
+      - DBHOST=mongodb://db:27017
+      - DBNAME=video_service
+      - VIDEO_STORAGE_HOST=video-storage  
+      - VIDEO_STORAGE_PORT=80 
+      - GOOGLE_APPLICATION_CREDENTIALS=cloud-project-444314-0852c8805c7b.json
+    depends_on:
+      - db
+ 
+    restart: "no"

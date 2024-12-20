@@ -1,0 +1,27 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: authentication
+  template:
+    metadata:
+      labels:
+        app: authentication
+    spec:
+      containers:
+      - name: authentication
+        image: gcr.io/cloud-project-444314/authentication:latest
+        ports:
+          - containerPort: 80
+        env:
+          - name: PORT
+            value: "80"
+          - name: DBHOST
+            value: "mongodb-service:27017"
+          - name: DBNAME
+            value: "video_service"

@@ -1,0 +1,31 @@
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usage-monitoring-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: usage-monitoring
+  template:
+    metadata:
+      labels:
+        app: usage-monitoring
+    spec:
+      containers:
+      - name: usage-monitoring
+        image: gcr.io/cloud-project-444314/usage-monitoring:latest
+        ports:
+          - containerPort: 80
+        env:
+          - name: PORT
+            value: "80"
+          - name: DBHOST
+            value: "mongodb-service:27017"
+          - name: DBNAME
+            value: "video_service"
+          - name: DAILY_BANDWIDTH_LIMIT
+            value: "104857600"

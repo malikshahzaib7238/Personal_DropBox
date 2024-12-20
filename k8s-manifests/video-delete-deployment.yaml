@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-delete-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: video-delete
+  template:
+    metadata:
+      labels:
+        app: video-delete
+    spec:
+      containers:
+      - name: video-delete
+        image: gcr.io/cloud-project-444314/video-delete:latest
+        ports:
+          - containerPort: 80
+        env:
+          - name: PORT
+            value: "80"
+          - name: DBHOST
+            value: "mongodb-service:27017"
+          - name: DBNAME
+            value: "video_service"
+          - name: VIDEO_STORAGE_HOST
+            value: "video-storage-service"
+          - name: VIDEO_STORAGE_PORT
+            value: "80"
+          - name: STORAGE_MANAGEMENT_HOST
+            value: "storage-management-service"
+          - name: STORAGE_MANAGEMENT_PORT
+            value: "80"
+          - name: USAGE_MONITORING_HOST
+            value: "usage-monitoring-service"
+          - name: USAGE_MONITORING_PORT
+            value: "80"
